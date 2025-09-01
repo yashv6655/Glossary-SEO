@@ -73,32 +73,93 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create project
+    // Create or update project
     const projectName = name || repoInfo.repo
-    const projectSlug = slugify(projectName)
+    let projectSlug = slugify(projectName)
     
-    console.log(`[IMPORT] Creating project "${projectName}" for user ${authResult.user.id}`)
-    const { data: project, error: projectError } = await supabase
+    // Check if project already exists for this user
+    console.log(`[IMPORT] Checking for existing project "${projectName}" for user ${authResult.user.id}`)
+    const { data: existingProject } = await supabase
       .from('projects')
-      .insert({
-        name: projectName,
-        slug: projectSlug,
-        repo: `${repoInfo.owner}/${repoInfo.repo}`,
-        is_public: true,
-        owner_id: authResult.user.id,
-        created_by: authResult.user.id
-      })
-      .select()
+      .select('*')
+      .eq('slug', projectSlug)
+      .eq('owner_id', authResult.user.id)
       .single()
 
-    console.log(`[IMPORT] Project creation result:`, { project: project?.id, error: projectError })
+    let project
+    if (existingProject) {
+      console.log(`[IMPORT] Updating existing project ${existingProject.id}`)
+      
+      // Delete existing terms first
+      await supabase
+        .from('glossary_terms')
+        .delete()
+        .eq('project_id', existingProject.id)
+      
+      // Update project with new repo info
+      const { data: updatedProject, error: updateError } = await supabase
+        .from('projects')
+        .update({
+          repo: `${repoInfo.owner}/${repoInfo.repo}`,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingProject.id)
+        .select()
+        .single()
+      
+      if (updateError) {
+        console.error('Project update error:', updateError)
+        return NextResponse.json(
+          { error: 'Failed to update project' },
+          { status: 500 }
+        )
+      }
+      
+      project = updatedProject
+    } else {
+      // Generate unique slug if needed
+      let slugSuffix = 1
+      let uniqueSlug = projectSlug
+      
+      while (true) {
+        const { data: conflictCheck } = await supabase
+          .from('projects')
+          .select('id')
+          .eq('slug', uniqueSlug)
+          .single()
+        
+        if (!conflictCheck) {
+          projectSlug = uniqueSlug
+          break
+        }
+        
+        uniqueSlug = `${projectSlug}-${slugSuffix}`
+        slugSuffix++
+      }
+      
+      console.log(`[IMPORT] Creating new project "${projectName}" with slug "${projectSlug}"`)
+      const { data: newProject, error: projectError } = await supabase
+        .from('projects')
+        .insert({
+          name: projectName,
+          slug: projectSlug,
+          repo: `${repoInfo.owner}/${repoInfo.repo}`,
+          is_public: true,
+          owner_id: authResult.user.id,
+          created_by: authResult.user.id
+        })
+        .select()
+        .single()
 
-    if (projectError) {
-      console.error('Project creation error:', projectError)
-      return NextResponse.json(
-        { error: 'Failed to create project' },
-        { status: 500 }
-      )
+      if (projectError) {
+        console.error('Project creation error:', projectError)
+        return NextResponse.json(
+          { error: 'Failed to create project' },
+          { status: 500 }
+        )
+      }
+      
+      project = newProject
     }
 
     // Create glossary terms

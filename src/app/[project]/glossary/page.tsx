@@ -17,8 +17,11 @@ export default function GlossaryPage({ params }: GlossaryPageProps) {
   const [projectSlug, setProjectSlug] = useState<string>('')
   const [projectData, setProjectData] = useState<any>(null)
   const [terms, setTerms] = useState<any[]>([])
+  const [filteredTerms, setFilteredTerms] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedTag, setSelectedTag] = useState<string | null>(null)
 
   useEffect(() => {
     const loadParams = async () => {
@@ -57,12 +60,41 @@ export default function GlossaryPage({ params }: GlossaryPageProps) {
       
       setProjectData(projectResult.project)
       setTerms(termsResult.terms || [])
+      setFilteredTerms(termsResult.terms || [])
     } catch (err) {
       console.error('[GLOSSARY] Error:', err)
       setError(err instanceof Error ? err.message : 'Failed to load glossary')
     } finally {
       setLoading(false)
     }
+  }
+
+  // Filter terms based on search query and selected tag
+  useEffect(() => {
+    let filtered = terms
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim()
+      filtered = filtered.filter(term => 
+        term.term.toLowerCase().includes(query) ||
+        term.definition?.toLowerCase().includes(query) ||
+        (term.tags && term.tags.some((tag: string) => tag.toLowerCase().includes(query)))
+      )
+    }
+
+    // Apply tag filter
+    if (selectedTag) {
+      filtered = filtered.filter(term => 
+        term.tags && term.tags.includes(selectedTag)
+      )
+    }
+
+    setFilteredTerms(filtered)
+  }, [terms, searchQuery, selectedTag])
+
+  const handleTagFilter = (tag: string | null) => {
+    setSelectedTag(selectedTag === tag ? null : tag)
   }
 
   const uniqueTags = Array.from(new Set(terms.flatMap(term => term.tags || [])))
@@ -153,15 +185,26 @@ export default function GlossaryPage({ params }: GlossaryPageProps) {
               <Input
                 placeholder="Search terms..."
                 className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
             
             <div className="flex flex-wrap gap-2">
-              <Badge variant="outline" className="cursor-pointer hover:bg-gray-100">
+              <Badge 
+                variant={selectedTag === null ? "default" : "outline"} 
+                className="cursor-pointer hover:bg-gray-100"
+                onClick={() => handleTagFilter(null)}
+              >
                 All
               </Badge>
               {uniqueTags.slice(0, 6).map((tag) => (
-                <Badge key={tag} variant="outline" className="cursor-pointer hover:bg-gray-100">
+                <Badge 
+                  key={tag} 
+                  variant={selectedTag === tag ? "default" : "outline"} 
+                  className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleTagFilter(tag)}
+                >
                   {tag}
                 </Badge>
               ))}
@@ -169,19 +212,36 @@ export default function GlossaryPage({ params }: GlossaryPageProps) {
           </div>
         </div>
 
-        {/* Terms Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {terms.map((term) => (
-            <TermCard key={term.id} term={term} />
-          ))}
+        {/* Results Info */}
+        <div className="mb-6">
+          <p className="text-sm text-gray-600">
+            Showing {filteredTerms.length} of {terms.length} terms
+            {searchQuery && <span> for "{searchQuery}"</span>}
+            {selectedTag && <span> tagged with "{selectedTag}"</span>}
+          </p>
         </div>
 
-        {/* Load More */}
-        <div className="text-center mt-12">
-          <Button variant="outline">
-            Load More Terms
-          </Button>
-        </div>
+        {/* Terms Grid */}
+        {filteredTerms.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredTerms.map((term) => (
+              <TermCard key={term.id} term={term} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-gray-500 mb-4">No terms found matching your criteria.</p>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setSearchQuery('')
+                setSelectedTag(null)
+              }}
+            >
+              Clear Filters
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )
