@@ -216,8 +216,8 @@ export default function GlossaryPage({ params }: GlossaryPageProps) {
         <div className="mb-6">
           <p className="text-sm text-gray-600">
             Showing {filteredTerms.length} of {terms.length} terms
-            {searchQuery && <span> for "{searchQuery}"</span>}
-            {selectedTag && <span> tagged with "{selectedTag}"</span>}
+            {searchQuery && <span> for &quot;{searchQuery}&quot;</span>}
+            {selectedTag && <span> tagged with &quot;{selectedTag}&quot;</span>}
           </p>
         </div>
 

@@ -105,8 +105,8 @@ export function ImportForm({ onSubmit }: ImportFormProps) {
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-          <Button type="submit" className="w-full" disabled={!repo.trim() || step === 'processing'}>
-            {step === 'processing' ? 'Analyzing...' : 'Import Repository'}
+          <Button type="submit" className="w-full" disabled={!repo.trim() || (step as any) === 'processing'}>
+            {(step as any) === 'processing' ? 'Analyzing...' : 'Import Repository'}
           </Button>
         </form>
         <div className="mt-6 pt-4 border-t border-gray-100">

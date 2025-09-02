@@ -91,7 +91,7 @@ export function RegisterForm() {
           <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2">Check your email</h2>
           <p className="text-gray-600 mb-6">
-            We've sent a confirmation link to <strong>{email}</strong>
+            We&apos;ve sent a confirmation link to <strong>{email}</strong>
           </p>
           <Button asChild variant="outline" className="w-full">
             <Link href="/auth/login">Back to Sign in</Link>

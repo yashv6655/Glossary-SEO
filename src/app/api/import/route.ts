@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { repo, name, analysisPath } = ImportRequestSchema.parse(body)
+    const { repo, name } = ImportRequestSchema.parse(body)
 
     // Initialize clients
     const githubToken = process.env.GITHUB_TOKEN
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     // Fetch documentation files
     console.log(`[IMPORT] Fetching documentation for ${repoInfo.owner}/${repoInfo.repo}`)
-    const docFiles = await github.findDocumentationFiles(repoInfo.owner, repoInfo.repo, analysisPath)
+    const docFiles = await github.findDocumentationFiles(repoInfo.owner, repoInfo.repo)
     console.log(`[IMPORT] Found ${docFiles.length} documentation files`)
     
     if (docFiles.length === 0) {
@@ -223,38 +223,3 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Rate limiting (simple in-memory implementation)
-const requestCounts = new Map<string, { count: number; resetTime: number }>()
-const RATE_LIMIT = 5 // requests per window
-const WINDOW_MS = 15 * 60 * 1000 // 15 minutes
-
-function checkRateLimit(clientId: string): boolean {
-  const now = Date.now()
-  const client = requestCounts.get(clientId)
-
-  if (!client || now > client.resetTime) {
-    requestCounts.set(clientId, { count: 1, resetTime: now + WINDOW_MS })
-    return true
-  }
-
-  if (client.count >= RATE_LIMIT) {
-    return false
-  }
-
-  client.count++
-  return true
-}
-
-export async function middleware(request: NextRequest) {
-  // Simple rate limiting by IP
-  const clientId = request.ip || 'anonymous'
-  
-  if (!checkRateLimit(clientId)) {
-    return NextResponse.json(
-      { error: 'Too many requests. Please try again later.' },
-      { status: 429 }
-    )
-  }
-
-  return NextResponse.next()
-}

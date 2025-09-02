@@ -105,11 +105,11 @@ export class GitHubClient {
     // Handle different GitHub URL formats
     const patterns = [
       // https://github.com/owner/repo
-      /^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)(?:\/.*)?$/,
+      /^https?:\/\/github\.com\/([^/]+)\/([^/]+)(?:\/.*)?$/,
       // github.com/owner/repo
-      /^github\.com\/([^\/]+)\/([^\/]+)(?:\/.*)?$/,
+      /^github\.com\/([^/]+)\/([^/]+)(?:\/.*)?$/,
       // owner/repo
-      /^([^\/\s]+)\/([^\/\s]+)$/
+      /^([^/\s]+)\/([^/\s]+)$/
     ]
 
     for (const pattern of patterns) {

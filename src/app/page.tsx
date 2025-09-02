@@ -111,7 +111,7 @@ export default function HomePage() {
               See it in action
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Here's what a generated glossary looks like from a typical React project
+              Here&apos;s what a generated glossary looks like from a typical React project
             </p>
           </div>
           

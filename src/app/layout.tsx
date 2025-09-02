@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Header } from "@/components/layout/Header";
@@ -26,15 +27,17 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <body className="min-h-screen bg-gray-50 font-sans antialiased">
         <AuthProvider>
-          <PostHogProvider>
-            <div className="flex min-h-screen flex-col">
-              <Header />
-              <main className="flex-1">
-                {children}
-              </main>
-              <Footer />
-            </div>
-          </PostHogProvider>
+          <Suspense fallback={null}>
+            <PostHogProvider>
+              <div className="flex min-h-screen flex-col">
+                <Header />
+                <main className="flex-1">
+                  {children}
+                </main>
+                <Footer />
+              </div>
+            </PostHogProvider>
+          </Suspense>
         </AuthProvider>
       </body>
     </html>
