@@ -21,19 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user as AuthUser | null)
       setLoading(false)
 
-      // PostHog analytics (if configured)
-      if (typeof window !== 'undefined' && session?.user) {
-        const email = session.user.email
-        const domain = email?.includes('@') ? email.split('@')[1] : undefined
-        
-        // Optional PostHog tracking
-        if (window.posthog) {
-          window.posthog.identify(session.user.id, {
-            email_domain: domain,
-            is_authenticated: true,
-          })
-        }
-      }
+      
     }
 
     getInitialSession()
@@ -45,20 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user as AuthUser | null)
       setLoading(false)
 
-      if (typeof window !== 'undefined' && window.posthog) {
-        if (session?.user) {
-          const email = session.user.email
-          const domain = email?.includes('@') ? email.split('@')[1] : undefined
-          window.posthog.identify(session.user.id, {
-            email_domain: domain,
-            is_authenticated: true,
-          })
-          window.posthog.capture(event === 'SIGNED_IN' ? 'auth_sign_in' : 'auth_event', { event })
-        } else {
-          window.posthog.capture('auth_sign_out')
-          window.posthog.reset()
-        }
-      }
+      
     })
 
     return () => subscription.unsubscribe()
@@ -94,13 +69,3 @@ export const useAuth = () => {
   return context
 }
 
-// PostHog type declaration for window
-declare global {
-  interface Window {
-    posthog?: {
-      identify: (id: string, props: Record<string, any>) => void
-      capture: (event: string, props?: Record<string, any>) => void
-      reset: () => void
-    }
-  }
-}

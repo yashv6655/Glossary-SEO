@@ -1,15 +1,25 @@
-# DevGlossary
+# DevGlossary - Technical Content SEO Platform
 
-A beautiful, AI-powered tool for generating developer glossaries from GitHub repositories. Extract technical terms from your documentation and create searchable, SEO-friendly glossaries.
+**Auto-generate SEO-optimized glossaries that capture developer search traffic.**
+
+Transform your GitHub repos into hundreds of search-ranking definition pages. When developers Google "what is webpack hot module replacement" or "Next.js middleware explained", they find YOUR glossary pages instead of Stack Overflow.
+
+## The SEO Value
+
+- **Long-tail Search Capture**: Rank for thousands of "what is [technical term]" searches  
+- **Content at Scale**: Generate 50+ SEO pages from one repository automatically
+- **Developer Traffic Funnel**: Convert definition searches into product awareness
+- **Technical Authority**: Own the definition space in your domain
+
+Perfect for developer tool companies who want to capture technical search traffic without hiring content teams.
 
 ## Features
 
-- 🤖 **AI-Powered**: Uses Claude AI to intelligently extract and define technical terms
-- 📚 **GitHub Integration**: Import documentation from any public repository
-- 🎨 **Beautiful UI**: Clean, Airbnb-inspired design with responsive layouts
-- 🔍 **Searchable**: Fast, instant search through terms and definitions
-- 🌐 **SEO-Friendly**: Public glossary pages optimized for search engines
-- 📱 **Mobile-First**: Responsive design that works on all devices
+- 🤖 **AI-Powered**: Claude extracts and defines technical terms with SEO optimization
+- 📚 **GitHub Integration**: Import from any repository (React, Vue, your product docs)
+- 🔍 **Search Optimized**: Each term becomes a rankable landing page
+- 🎯 **Developer Focused**: Captures technical searches competitors miss
+- 📱 **Production Ready**: Clean UI, fast search, mobile-responsive
 
 ## Quick Start
 
@@ -42,12 +52,23 @@ A beautiful, AI-powered tool for generating developer glossaries from GitHub rep
    
    Visit [http://localhost:3000](http://localhost:3000)
 
+## ROI for Developer Tool Companies
+
+**Instead of $50k/month for content writers, generate technical SEO content automatically.**
+
+Examples:
+- **Vercel** could capture "Edge function deployment" searches
+- **Linear** could own "Git workflow automation" definitions  
+- **PostHog** could rank for "Event tracking analytics" queries
+
+Each imported repository becomes dozens of search-optimized landing pages that build domain authority and capture qualified developer traffic.
+
 ## How It Works
 
-1. **Import**: Enter a GitHub repository URL (e.g., `facebook/react`)
-2. **Extract**: AI scans README, docs, and markdown files for technical terms
-3. **Glossary**: Get a beautiful, searchable glossary with definitions
-4. **Share**: Public SEO-friendly pages for each project glossary
+1. **Import**: Enter any GitHub repository URL (`facebook/react`, `your-company/docs`)
+2. **AI Extract**: Claude scans documentation for technical terms and concepts
+3. **SEO Optimize**: Each term becomes a search-friendly definition page
+4. **Rank & Convert**: Capture developer searches and funnel to your product
 
 ## Tech Stack
 
