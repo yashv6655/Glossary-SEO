@@ -55,70 +55,50 @@ export class GitHubClient {
     return Buffer.from(data.content, 'base64').toString('utf-8')
   }
 
-  async findDocumentationFiles(owner: string, repo: string): Promise<{ path: string; content: string }[]> {
+  
+
+  async findDocumentationFiles(owner: string, repo: string, analysisPath?: string): Promise<{ path: string; content: string }[]> {
     const documentationFiles: { path: string; content: string }[] = []
-    
-    // Common documentation file patterns
-    const docPatterns = [
-      /^README\.md$/i,
-      /^CONTRIBUTING\.md$/i,
-      /^docs\/.*\.md$/i,
-      /^documentation\/.*\.md$/i,
-      /.*\.md$/i // Fallback to any markdown file
+
+    // Get the default branch
+    const repoData = await this.fetch(`${this.baseUrl}/repos/${owner}/${repo}`)
+    const defaultBranch = repoData.default_branch
+
+    // Get the recursive tree
+    const treeData = await this.fetch(`${this.baseUrl}/repos/${owner}/${repo}/git/trees/${defaultBranch}?recursive=1`)
+    const allFiles = treeData.tree
+
+    const includedExtensions = [
+      '.js', '.ts', '.tsx', '.py', '.go', '.java', '.rb', '.php', '.c', '.cpp', '.h', '.cs', 
+      '.html', '.css', '.scss', '.less', '.sh', '.md', '.txt'
     ]
 
-    try {
-      // Get root files
-      const rootFiles = await this.getRepoFiles(owner, repo)
-      
-      // Check root level files
-      for (const file of rootFiles) {
-        if (file.type === 'file' && docPatterns.some(pattern => pattern.test(file.path))) {
-          try {
-            const content = await this.getFileContent(owner, repo, file.path)
-            documentationFiles.push({ path: file.path, content })
-          } catch (error) {
-            console.warn(`[GITHUB] Failed to fetch content for ${file.path}:`, error)
-          }
-        }
-        
-        // Check docs directory
-        if (file.type === 'dir' && (file.name === 'docs' || file.name === 'documentation')) {
-          try {
-            const docDirFiles = await this.getRepoFiles(owner, repo, file.path)
-            for (const docFile of docDirFiles) {
-              if (docFile.type === 'file' && docFile.path.endsWith('.md')) {
-                try {
-                  const content = await this.getFileContent(owner, repo, docFile.path)
-                  documentationFiles.push({ path: docFile.path, content })
-                } catch (error) {
-                  console.warn(`[GITHUB] Failed to fetch content for ${docFile.path}:`, error)
-                }
-              }
-            }
-          } catch (error) {
-            console.warn(`[GITHUB] Failed to fetch docs directory ${file.path}:`, error)
-          }
-        }
-      }
+    const excludedDirectories = [
+      'node_modules', '.git', 'dist', 'build', 'coverage', 'test', 'tests', '__tests__', 'vendor', 'public'
+    ]
 
-      return documentationFiles.slice(0, 10) // Limit to first 10 files to avoid rate limits
-    } catch (error) {
-      console.error('[GITHUB] Repository fetch error:', error)
-      if (error instanceof Error) {
-        // More user-friendly error messages
-        if (error.message.includes('404')) {
-          throw new Error(`Repository "${owner}/${repo}" not found or is private`)
-        }
-        if (error.message.includes('403')) {
-          throw new Error('GitHub API rate limit exceeded. Please try again later.')
-        }
-        if (error.message.includes('Invalid input')) {
-          throw new Error('Unable to access some files in the repository. This may be due to large files or GitHub API limitations.')
-        }
+    const filesToAnalyze = allFiles.filter((file: any) => {
+      if (file.type !== 'blob') return false
+
+      const hasIncludedExtension = includedExtensions.some(ext => file.path.endsWith(ext))
+      if (!hasIncludedExtension) return false
+
+      const isInExcludedDirectory = excludedDirectories.some(dir => file.path.startsWith(`${dir}/`) || file.path.includes(`/${dir}/`))
+      if (isInExcludedDirectory) return false
+
+      return true
+    })
+
+    for (const file of filesToAnalyze) {
+      try {
+        const content = await this.getFileContent(owner, repo, file.path)
+        documentationFiles.push({ path: file.path, content })
+      } catch (error) {
+        console.warn(`[GITHUB] Failed to fetch content for ${file.path}:`, error)
       }
-      throw new Error(`Failed to access repository "${owner}/${repo}". Please check the repository name and try again.`)
     }
+
+    return documentationFiles
   }
 
   parseRepoUrl(input: string): { owner: string; repo: string } | null {

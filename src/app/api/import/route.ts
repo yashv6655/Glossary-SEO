@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { repo, name } = ImportRequestSchema.parse(body)
+    const { repo, name, analysisPath } = ImportRequestSchema.parse(body)
 
     // Initialize clients
     const githubToken = process.env.GITHUB_TOKEN
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     // Fetch documentation files
     console.log(`[IMPORT] Fetching documentation for ${repoInfo.owner}/${repoInfo.repo}`)
-    const docFiles = await github.findDocumentationFiles(repoInfo.owner, repoInfo.repo)
+    const docFiles = await github.findDocumentationFiles(repoInfo.owner, repoInfo.repo, analysisPath)
     console.log(`[IMPORT] Found ${docFiles.length} documentation files`)
     
     if (docFiles.length === 0) {

@@ -39,63 +39,73 @@ Rules:
 - Set confidence based on how clearly the term is defined in the documentation
 - Extract 10-30 terms maximum, prioritizing the most important ones`
 
-    const userPrompt = this.buildUserPrompt(documentationFiles)
+    const batchSize = 20;
+    const allTerms: ExtractedTerm[] = [];
 
-    try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': this.apiKey,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: this.model,
-          max_tokens: 4000,
-          system: systemPrompt,
-          messages: [
-            {
-              role: 'user',
-              content: userPrompt
-            }
-          ]
-        })
-      })
+    for (let i = 0; i < documentationFiles.length; i += batchSize) {
+      const batch = documentationFiles.slice(i, i + batchSize);
+      const userPrompt = this.buildUserPrompt(batch);
 
-      if (!response.ok) {
-        throw new Error(`Claude API error: ${response.status} ${response.statusText}`)
-      }
-
-      const data = await response.json()
-      const content = data.content?.[0]?.text
-
-      if (!content) {
-        throw new Error('No content received from Claude API')
-      }
-
-      // Parse and validate the JSON response
       try {
-        const rawTerms = JSON.parse(content)
-        const terms = z.array(ExtractedTermSchema).parse(rawTerms)
-        
-        // Filter out low confidence terms and duplicates
-        const filteredTerms = terms
-          .filter(term => term.confidence >= 0.3)
-          .filter((term, index, arr) => 
-            arr.findIndex(t => t.term.toLowerCase() === term.term.toLowerCase()) === index
-          )
-          .sort((a, b) => b.confidence - a.confidence)
-          .slice(0, 25) // Limit to top 25 terms
+        console.log(`[CLAUDE] Processing batch ${i / batchSize + 1} of ${Math.ceil(documentationFiles.length / batchSize)}`);
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': this.apiKey,
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify({
+            model: this.model,
+            max_tokens: 4000,
+            system: systemPrompt,
+            messages: [
+              {
+                role: 'user',
+                content: userPrompt
+              }
+            ]
+          })
+        });
 
-        return filteredTerms
-      } catch (parseError) {
-        console.error('Failed to parse Claude response:', content)
-        throw new Error('Invalid JSON response from Claude API')
+        if (!response.ok) {
+          throw new Error(`Claude API error: ${response.status} ${response.statusText}`)
+        }
+
+        const data = await response.json();
+        const content = data.content?.[0]?.text;
+
+        if (content) {
+          try {
+            const rawTerms = JSON.parse(content);
+            const terms = z.array(ExtractedTermSchema).parse(rawTerms);
+            allTerms.push(...terms);
+          } catch (parseError) {
+            console.error('Failed to parse Claude response for batch:', content);
+          }
+        }
+
+        // Add a delay between requests to avoid rate limiting
+        if (i + batchSize < documentationFiles.length) {
+          await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+        }
+
+      } catch (error) {
+        console.error(`Claude API request failed for batch ${i / batchSize + 1}:`, error);
+        // Continue to next batch even if one fails
       }
-    } catch (error) {
-      console.error('Claude API request failed:', error)
-      throw error
     }
+
+    // Filter out low confidence terms and duplicates from all batches
+    const filteredTerms = allTerms
+      .filter(term => term.confidence >= 0.3)
+      .filter((term, index, arr) => 
+        arr.findIndex(t => t.term.toLowerCase() === term.term.toLowerCase()) === index
+      )
+      .sort((a, b) => b.confidence - a.confidence)
+      .slice(0, 100); // Increase the limit for the final result
+
+    return filteredTerms;
   }
 
   private buildUserPrompt(files: { path: string; content: string }[]): string {

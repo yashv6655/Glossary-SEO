@@ -13,14 +13,6 @@ Transform your GitHub repos into hundreds of search-ranking definition pages. Wh
 
 Perfect for developer tool companies who want to capture technical search traffic without hiring content teams.
 
-## Features
-
-- 🤖 **AI-Powered**: Claude extracts and defines technical terms with SEO optimization
-- 📚 **GitHub Integration**: Import from any repository (React, Vue, your product docs)
-- 🔍 **Search Optimized**: Each term becomes a rankable landing page
-- 🎯 **Developer Focused**: Captures technical searches competitors miss
-- 📱 **Production Ready**: Clean UI, fast search, mobile-responsive
-
 ## Quick Start
 
 1. **Clone and setup**:
@@ -69,6 +61,22 @@ Each imported repository becomes dozens of search-optimized landing pages that b
 2. **AI Extract**: Claude scans documentation for technical terms and concepts
 3. **SEO Optimize**: Each term becomes a search-friendly definition page
 4. **Rank & Convert**: Capture developer searches and funnel to your product
+
+## How This Helps Sita's ICP
+
+`dev-glossary` is more than just an SEO tool; it's a project designed to improve the developer experience.
+
+### For Developer Tool Companies
+
+- **Solve the "Developer Marketing" Problem:** Attract high-intent developer traffic through content-driven SEO without the high cost of a dedicated content team.
+- **Streamline Onboarding:** Use the generated glossary as a "map" to your codebase, helping new hires become productive faster.
+
+### For Individual Developers
+
+- **Learn New Codebases Faster:** The generated glossaries provide a clear, searchable reference for any new project, making it easier to understand the key concepts and components.
+- **Demystify "Tribal Knowledge":** By analyzing the code itself, `dev-glossary` surfaces internal components and terminology that are often undocumented.
+
+This project directly supports Sita's core mission of making it easier for developers to learn new codebases. By providing a tool that creates high-quality, comprehensive glossaries, we are helping to build a more accessible and understandable open-source ecosystem.
 
 ## Tech Stack
 
