@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { UserMenu } from '@/components/auth/UserMenu'
@@ -8,6 +9,11 @@ import { BookOpen, Github } from 'lucide-react'
 
 export function Header() {
   const { user, loading } = useAuth()
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/80 backdrop-blur-sm">
@@ -25,7 +31,7 @@ export function Header() {
           </div>
           
           <nav className="hidden md:flex items-center space-x-8">
-            {user && (
+            {isMounted && user && (
               <>
                 <Link 
                   href="/dashboard" 
@@ -50,7 +56,7 @@ export function Header() {
               </Link>
             </Button>
             
-            {!loading && (
+            {isMounted && !loading && (
               user ? (
                 <UserMenu />
               ) : (

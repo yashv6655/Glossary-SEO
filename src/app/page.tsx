@@ -61,10 +61,6 @@ export default function HomePage() {
                 <span>Free to use</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-                <span>No signup required</span>
-              </div>
-              <div className="flex items-center space-x-2">
                 <div className="h-2 w-2 rounded-full bg-purple-500"></div>
                 <span>AI-powered</span>
               </div>
