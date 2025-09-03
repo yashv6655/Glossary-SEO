@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import { TermCard } from '@/components/cards/TermCard'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -14,21 +14,13 @@ interface ManagePageProps {
   }>
 }
 
-export default function ManagePage({ params: paramsPromise }: ManagePageProps) {
+export default function ManagePage({ params }: ManagePageProps) {
+  const { project: projectSlug } = use(params)
   const [filter, setFilter] = useState<'all' | 'published' | 'draft'>('all')
-  const [projectSlug, setProjectSlug] = useState<string>('')
   const [projectData, setProjectData] = useState<any>(null)
   const [terms, setTerms] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-
-  useEffect(() => {
-    const loadParams = async () => {
-      const params = await paramsPromise
-      setProjectSlug(params.project)
-    }
-    loadParams()
-  }, [paramsPromise])
 
   useEffect(() => {
     if (projectSlug) {
@@ -219,6 +211,7 @@ export default function ManagePage({ params: paramsPromise }: ManagePageProps) {
             <TermCard 
               key={term.id} 
               term={term} 
+              projectSlug={projectSlug}
               onEdit={handleEditTerm}
               showActions={true}
             />

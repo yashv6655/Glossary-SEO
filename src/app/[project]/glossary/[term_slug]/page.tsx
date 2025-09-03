@@ -6,15 +6,16 @@ import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 
 interface TermPageProps {
-  params: {
+  params: Promise<{
     project: string
     term_slug: string
-  }
+  }>
 }
 
 // This function generates the metadata for the page (title, description, etc.)
 export async function generateMetadata({ params }: TermPageProps) {
-  const termData = await getTermBySlug(params.project, params.term_slug)
+  const { project, term_slug } = await params
+  const termData = await getTermBySlug(project, term_slug)
 
   if (!termData) {
     return { title: 'Term not found' }
@@ -27,7 +28,8 @@ export async function generateMetadata({ params }: TermPageProps) {
 }
 
 export default async function TermPage({ params }: TermPageProps) {
-  const termData = await getTermBySlug(params.project, params.term_slug)
+  const { project, term_slug } = await params
+  const termData = await getTermBySlug(project, term_slug)
 
   if (!termData) {
     notFound()
@@ -40,7 +42,7 @@ export default async function TermPage({ params }: TermPageProps) {
         <div className="flex items-center space-x-2 text-sm text-gray-500 mb-6">
           <Link href="/dashboard" className="hover:text-gray-700">Dashboard</Link>
           <ChevronRight className="h-4 w-4" />
-          <Link href={`/${params.project}/glossary`} className="hover:text-gray-700">
+          <Link href={`/${project}/glossary`} className="hover:text-gray-700">
             {termData.project.name} Glossary
           </Link>
           <ChevronRight className="h-4 w-4" />
@@ -70,7 +72,7 @@ export default async function TermPage({ params }: TermPageProps) {
         </Card>
 
         <div className="mt-8 text-center">
-          <Link href={`/${params.project}/glossary`} className="text-primary-600 hover:text-primary-500">
+          <Link href={`/${project}/glossary`} className="text-primary-600 hover:text-primary-500">
             &larr; Back to full glossary
           </Link>
         </div>

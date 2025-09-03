@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import { TermCard } from '@/components/cards/TermCard'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -14,7 +14,7 @@ interface GlossaryPageProps {
 }
 
 export default function GlossaryPage({ params }: GlossaryPageProps) {
-  const [projectSlug, setProjectSlug] = useState<string>('')
+  const { project: projectSlug } = use(params)
   const [projectData, setProjectData] = useState<any>(null)
   const [terms, setTerms] = useState<any[]>([])
   const [filteredTerms, setFilteredTerms] = useState<any[]>([])
@@ -22,14 +22,6 @@ export default function GlossaryPage({ params }: GlossaryPageProps) {
   const [error, setError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
-
-  useEffect(() => {
-    const loadParams = async () => {
-      const { project } = await params
-      setProjectSlug(project)
-    }
-    loadParams()
-  }, [params])
 
   useEffect(() => {
     if (projectSlug) {
