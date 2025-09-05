@@ -1,9 +1,10 @@
+'use client'
+
 import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { useRouter } from 'next/navigation'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/utils'
-import { Eye, Settings, Share2 } from 'lucide-react'
 
 interface ProjectCardProps {
   project: {
@@ -19,7 +20,8 @@ interface ProjectCardProps {
 
 export function ProjectCard({ project }: ProjectCardProps) {
   return (
-    <Card className="group cursor-pointer transition-all hover:scale-[1.02]">
+    <Link href={`/${project.slug}/glossary`}>
+      <Card className="group cursor-pointer transition-all hover:scale-[1.02]">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="space-y-1">
@@ -49,5 +51,6 @@ export function ProjectCard({ project }: ProjectCardProps) {
         </div>
       </CardContent>
       </Card>
+    </Link>
   )
 }
