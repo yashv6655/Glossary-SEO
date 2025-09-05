@@ -162,7 +162,7 @@ export default function GlossaryPage({ params }: GlossaryPageProps) {
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Glossary</h1>
           <p className="text-gray-600 mb-8">{error}</p>
           <button 
-            onClick={fetchProjectData}
+            onClick={() => fetchProjectData()}
             className="text-primary-600 hover:text-primary-500"
           >
             Try Again
