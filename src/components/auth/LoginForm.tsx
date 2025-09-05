@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/client'
-import { Github, Mail, Loader2, AlertCircle } from 'lucide-react'
+import { Mail, Loader2, AlertCircle } from 'lucide-react'
 
 export function LoginForm() {
   const [email, setEmail] = useState('')
@@ -46,27 +46,6 @@ export function LoginForm() {
     }
   }
 
-  const handleGitHubLogin = async () => {
-    setLoading(true)
-    setError('')
-
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback?redirectedFrom=${encodeURIComponent(redirectedFrom || '/dashboard')}`,
-        },
-      })
-
-      if (error) {
-        setError(error.message)
-        setLoading(false)
-      }
-    } catch (err) {
-      setError('An unexpected error occurred')
-      setLoading(false)
-    }
-  }
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -84,25 +63,6 @@ export function LoginForm() {
             <span>{error}</span>
           </div>
         )}
-
-        <Button
-          onClick={handleGitHubLogin}
-          variant="outline"
-          className="w-full"
-          disabled={loading}
-        >
-          <Github className="h-4 w-4 mr-2" />
-          Continue with GitHub
-        </Button>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-2 text-gray-500">Or continue with</span>
-          </div>
-        </div>
 
         <form onSubmit={handleEmailLogin} className="space-y-4">
           <div>
