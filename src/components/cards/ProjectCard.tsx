@@ -48,27 +48,6 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </div>
         </div>
       </CardContent>
-      
-      <CardFooter className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href={`/${project.slug}/glossary`}>
-              <Eye className="h-4 w-4 mr-1" />
-              View
-            </Link>
-          </Button>
-          <Button variant="ghost" size="sm" asChild>
-            <Link href={`/${project.slug}/manage`}>
-              <Settings className="h-4 w-4 mr-1" />
-              Manage
-            </Link>
-          </Button>
-        </div>
-        
-        <Button variant="ghost" size="sm">
-          <Share2 className="h-4 w-4" />
-        </Button>
-      </CardFooter>
-    </Card>
+      </Card>
   )
 }
