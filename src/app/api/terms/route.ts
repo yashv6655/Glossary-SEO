@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       .select(`
         *,
         projects!inner(slug, name, is_public)
-      `)
+      `, { count: 'exact' })
 
     // Filter by project slug
     if (projectSlug) {

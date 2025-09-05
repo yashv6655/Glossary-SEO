@@ -19,9 +19,13 @@ export default function GlossaryPage({ params }: GlossaryPageProps) {
   const [terms, setTerms] = useState<any[]>([])
   const [filteredTerms, setFilteredTerms] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [totalTerms, setTotalTerms] = useState(0)
 
   useEffect(() => {
     if (projectSlug) {
@@ -29,60 +33,109 @@ export default function GlossaryPage({ params }: GlossaryPageProps) {
     }
   }, [projectSlug])
 
-  const fetchProjectData = async () => {
+  const fetchProjectData = async (page = 1, resetData = true) => {
     try {
-      setLoading(true)
-      console.log(`[GLOSSARY] Fetching data for project: ${projectSlug}`)
-      
-      // Fetch project details
-      const projectResponse = await fetch(`/api/projects/${projectSlug}`)
-      if (!projectResponse.ok) {
-        throw new Error('Project not found')
+      if (resetData) {
+        setLoading(true)
+        setCurrentPage(1)
+        setHasMore(true)
+      } else {
+        setLoadingMore(true)
       }
-      const projectResult = await projectResponse.json()
       
-      // Fetch terms for this project
-      const termsResponse = await fetch(`/api/terms?project=${projectSlug}&status=published`)
+      console.log(`[GLOSSARY] Fetching data for project: ${projectSlug}, page: ${page}`)
+      
+      // Fetch project details only on initial load
+      if (resetData) {
+        const projectResponse = await fetch(`/api/projects/${projectSlug}`)
+        if (!projectResponse.ok) {
+          throw new Error('Project not found')
+        }
+        const projectResult = await projectResponse.json()
+        setProjectData(projectResult.project)
+      }
+      
+      // Fetch terms for this project with pagination
+      const termsResponse = await fetch(`/api/terms?project=${projectSlug}&status=published&page=${page}`)
       if (!termsResponse.ok) {
         throw new Error('Failed to fetch terms')
       }
       const termsResult = await termsResponse.json()
       
-      console.log('[GLOSSARY] Data loaded:', { project: projectResult.project, termsCount: termsResult.terms?.length })
+      console.log('[GLOSSARY] Data loaded:', { 
+        page, 
+        termsCount: termsResult.terms?.length,
+        pagination: termsResult.pagination
+      })
       
-      setProjectData(projectResult.project)
-      setTerms(termsResult.terms || [])
-      setFilteredTerms(termsResult.terms || [])
+      const newTerms = termsResult.terms || []
+      const pagination = termsResult.pagination
+      
+      if (resetData) {
+        setTerms(newTerms)
+        setFilteredTerms(newTerms)
+      } else {
+        // Append new terms to existing ones, avoiding duplicates
+        setTerms(prevTerms => {
+          const existingIds = new Set(prevTerms.map(term => term.id))
+          const uniqueNewTerms = newTerms.filter(term => !existingIds.has(term.id))
+          return [...prevTerms, ...uniqueNewTerms]
+        })
+        setFilteredTerms(prevFiltered => {
+          const existingIds = new Set(prevFiltered.map(term => term.id))
+          const uniqueNewTerms = newTerms.filter(term => !existingIds.has(term.id))
+          return [...prevFiltered, ...uniqueNewTerms]
+        })
+      }
+      
+      setTotalTerms(pagination?.total || 0)
+      setHasMore(pagination?.page < pagination?.pages)
+      setCurrentPage(pagination?.page || 1)
+      
     } catch (err) {
       console.error('[GLOSSARY] Error:', err)
       setError(err instanceof Error ? err.message : 'Failed to load glossary')
     } finally {
       setLoading(false)
+      setLoadingMore(false)
     }
   }
 
-  // Filter terms based on search query and selected tag
+  // Load more terms
+  const loadMoreTerms = async () => {
+    if (!hasMore || loadingMore) return
+    await fetchProjectData(currentPage + 1, false)
+  }
+
+  // Reset and refetch when search/filter changes
   useEffect(() => {
-    let filtered = terms
+    if (searchQuery.trim() || selectedTag) {
+      // For search/filter, we'll need to refetch from the beginning
+      // For now, we'll filter client-side from loaded terms
+      let filtered = terms
 
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim()
-      filtered = filtered.filter(term => 
-        term.term.toLowerCase().includes(query) ||
-        term.definition?.toLowerCase().includes(query) ||
-        (term.tags && term.tags.some((tag: string) => tag.toLowerCase().includes(query)))
-      )
+      // Apply search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim()
+        filtered = filtered.filter(term => 
+          term.term.toLowerCase().includes(query) ||
+          term.definition?.toLowerCase().includes(query) ||
+          (term.tags && term.tags.some((tag: string) => tag.toLowerCase().includes(query)))
+        )
+      }
+
+      // Apply tag filter
+      if (selectedTag) {
+        filtered = filtered.filter(term => 
+          term.tags && term.tags.includes(selectedTag)
+        )
+      }
+
+      setFilteredTerms(filtered)
+    } else {
+      // No filters, show all loaded terms
+      setFilteredTerms(terms)
     }
-
-    // Apply tag filter
-    if (selectedTag) {
-      filtered = filtered.filter(term => 
-        term.tags && term.tags.includes(selectedTag)
-      )
-    }
-
-    setFilteredTerms(filtered)
   }, [terms, searchQuery, selectedTag])
 
   const handleTagFilter = (tag: string | null) => {
@@ -143,7 +196,16 @@ export default function GlossaryPage({ params }: GlossaryPageProps) {
                 Developer glossary for {projectData.repo}
               </p>
               <div className="flex items-center space-x-4 text-sm text-gray-500">
-                <span>{terms.length} terms</span>
+                <span>
+                  {totalTerms > 0 ? (
+                    <>
+                      {terms.length} of {totalTerms} terms loaded
+                      {terms.length < totalTerms && <span className="text-primary-600 ml-1">(+ {totalTerms - terms.length} more)</span>}
+                    </>
+                  ) : (
+                    `${terms.length} terms`
+                  )}
+                </span>
                 <span>•</span>
                 <span>Updated {new Date(projectData.updated_at).toLocaleDateString()}</span>
                 <span>•</span>
@@ -207,19 +269,63 @@ export default function GlossaryPage({ params }: GlossaryPageProps) {
         {/* Results Info */}
         <div className="mb-6">
           <p className="text-sm text-gray-600">
-            Showing {filteredTerms.length} of {terms.length} terms
+            Showing {filteredTerms.length} of {totalTerms > 0 ? totalTerms : terms.length} terms
             {searchQuery && <span> for &quot;{searchQuery}&quot;</span>}
             {selectedTag && <span> tagged with &quot;{selectedTag}&quot;</span>}
+            {(searchQuery || selectedTag) && terms.length < totalTerms && (
+              <span className="text-amber-600 ml-2">(filtered from {terms.length} loaded terms - load more to see all results)</span>
+            )}
           </p>
         </div>
 
         {/* Terms Grid */}
         {filteredTerms.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTerms.map((term) => (
-              <TermCard key={term.id} term={term} projectSlug={projectSlug} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredTerms.map((term) => (
+                <TermCard key={term.id} term={term} projectSlug={projectSlug} />
+              ))}
+            </div>
+            
+            {/* Load More Button */}
+            {!searchQuery && !selectedTag && hasMore && (
+              <div className="mt-12 text-center">
+                <Button
+                  onClick={loadMoreTerms}
+                  disabled={loadingMore}
+                  size="lg"
+                  variant="outline"
+                  className="min-w-32"
+                >
+                  {loadingMore ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      Load More Terms
+                      <span className="ml-2 text-sm text-gray-500">
+                        ({totalTerms - terms.length} remaining)
+                      </span>
+                    </>
+                  )}
+                </Button>
+                <p className="text-sm text-gray-500 mt-2">
+                  Loaded {terms.length} of {totalTerms} terms
+                </p>
+              </div>
+            )}
+
+            {/* All Loaded Message */}
+            {!hasMore && terms.length > 20 && (
+              <div className="mt-12 text-center">
+                <p className="text-sm text-gray-500">
+                  All {totalTerms} terms loaded
+                </p>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-12">
             <p className="text-gray-500 mb-4">No terms found matching your criteria.</p>
